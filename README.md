@@ -2,11 +2,20 @@
 
 A minimal Windows tray application that remaps the mouse **position** as it crosses between
 displays with different DPI, plus the corner-unsticking and edge-jumping behaviours from
-MouseUnSnag.
+[MouseUnSnag].
 
 It is deliberately small: a global low-level mouse hook, a pure mapping engine, and a
-right-click tray menu. Configuration is a single JSON file, editable through a direct-
-manipulation layout editor (or by hand).
+right-click tray menu. Configuration is a single JSON file, editable through a
+physical on-display overlay (or by hand).
+
+Built by studying two prior projects:
+
+- [MouseUnSnag] — the minimal tray UX and the corner-unstick / edge-jump / wrap behaviours.
+- [LittleBigMouse] — the DPI-corrected coordinates model (a display has both a pixel rectangle
+  and a physical position) and the zone/link mapping this project's border profiles mirror.
+
+[MouseUnSnag]: https://github.com/MouseUnSnag/MouseUnSnag
+[LittleBigMouse]: https://github.com/mgth/LittleBigMouse
 
 ## Why
 
@@ -16,7 +25,7 @@ factors, the pixel-continuous mapping is not physically continuous, so the curso
 the wrong height (and jumps in speed) when it crosses. BetterMouse keeps the cursor at the
 same *physical* position by mapping crossings through a DPI-corrected correspondence.
 
-This mirrors the coordinates model used by LittleBigMouse (a display has both a pixel
+This mirrors the coordinates model used by [LittleBigMouse] (a display has both a pixel
 rectangle and a physical position), but replaces "drag whole monitor rectangles around"
 with "drag handles along a single shared edge".
 
