@@ -117,6 +117,15 @@ Stored at `%APPDATA%\BetterMouse\config.json`. Example border:
 
 ## Build and run
 
+### Running a release
+
+Release builds are **framework-dependent**: the downloadable `BetterMouse.exe` is small, but
+it needs the **.NET 8 Desktop Runtime** installed separately. Download the *Windows Desktop*
+Runtime (x64) from <https://dotnet.microsoft.com/download/dotnet/8.0> if it is not already
+present, then run `BetterMouse.exe`.
+
+### From source
+
 Requires the .NET 8 SDK (or newer):
 
 ```
