@@ -1,5 +1,4 @@
 using System;
-using System.Drawing;
 using System.Windows.Forms;
 using BetterMouse.Overlay;
 
@@ -107,7 +106,7 @@ internal sealed class TrayController : IDisposable
 
         _icon = new NotifyIcon
         {
-            Icon = SystemIcons.Application,
+            Icon = AppIcon.Load(),
             Text = "BetterMouse",
             ContextMenuStrip = menu,
             Visible = true,

@@ -1,0 +1,2 @@
+# Keep shell scripts runnable on Windows checkouts.
+*.sh text eol=lf

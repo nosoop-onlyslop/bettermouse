@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3B82F6"/>
+      <stop offset="1" stop-color="#1D4ED8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- App tile -->
+  <rect x="0" y="0" width="512" height="512" rx="112" fill="url(#panel)"/>
+
+  <!-- Two displays meeting at a shared edge -->
+  <rect x="64" y="120" width="168" height="272" rx="24" fill="#E4EDFF"/>
+  <rect x="280" y="120" width="168" height="272" rx="24" fill="#E4EDFF"/>
+
+  <!-- Cursor crossing the border between the displays -->
+  <path d="M176 150 L176 358 L230.6 308.6 L265.7 384 L298.2 369.7 L263.1 295.6 L332 295.6 Z"
+        fill="#0B1220" stroke="#FFFFFF" stroke-width="14"
+        stroke-linejoin="round" stroke-linecap="round"/>
+</svg>
