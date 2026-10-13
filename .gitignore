@@ -1,0 +1,8 @@
+bin/
+obj/
+.vs/
+*.user
+*.suo
+
+# Reference-only clones, not part of this project
+.attic/

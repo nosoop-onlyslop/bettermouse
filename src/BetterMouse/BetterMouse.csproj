@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AssemblyName>BetterMouse</AssemblyName>
+    <RootNamespace>BetterMouse</RootNamespace>
+    <!-- WPF needs PerMonitorV2 from the manifest; the WinForms analyzer suggests an
+         Application.SetHighDpiMode call instead, which does not apply here. -->
+    <NoWarn>$(NoWarn);WFAC010</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BetterMouse.Core\BetterMouse.Core.csproj" />
+  </ItemGroup>
+
+</Project>
