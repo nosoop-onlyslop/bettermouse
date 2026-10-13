@@ -133,6 +133,18 @@ public partial class DisplayOverlayWindow : Window
         var cw = w * DipScale;
         var ch = h * DipScale;
 
+        // Dim the desktop so the guides stand out. Stronger while editing.
+        var dimAlpha = _mode() == OverlayMode.Edit ? (byte)0x66 : (byte)0x40;
+        var dim = new Rectangle
+        {
+            Width = cw,
+            Height = ch,
+            Fill = new SolidColorBrush(Color.FromArgb(dimAlpha, 0x00, 0x00, 0x00)),
+        };
+        Canvas.SetLeft(dim, 0);
+        Canvas.SetTop(dim, 0);
+        Surface.Children.Add(dim);
+
         var outlineBrush = new SolidColorBrush(Color.FromArgb(0x66, 0x4E, 0xC9, 0xB0));
         var outline = new Rectangle { Width = cw, Height = ch, Stroke = outlineBrush, StrokeThickness = 2 };
         Canvas.SetLeft(outline, 0);

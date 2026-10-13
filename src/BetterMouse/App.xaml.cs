@@ -75,6 +75,9 @@ public partial class App : Application
         OverlayModeChanged?.Invoke();
     }
 
+    /// <summary>"Done editing" from an overlay: return to whatever was shown before edit mode.</summary>
+    public void FinishEditing() => SetOverlayMode(_overlay.ReturnMode);
+
     /// <summary>Called by an overlay after the user edits a handle.</summary>
     public void OnOverlayChanged()
     {

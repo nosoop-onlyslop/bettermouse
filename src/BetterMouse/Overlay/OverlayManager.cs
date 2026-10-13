@@ -14,10 +14,21 @@ internal sealed class OverlayManager : IDisposable
         _app = app;
     }
 
+    private OverlayMode _returnMode = OverlayMode.Off;
+
     public OverlayMode Mode { get; private set; } = OverlayMode.Off;
+
+    /// <summary>
+    /// Where "Done editing" returns to: <see cref="OverlayMode.View"/> if the overlay was
+    /// already on when edit mode started, otherwise <see cref="OverlayMode.Off"/>.
+    /// </summary>
+    public OverlayMode ReturnMode => _returnMode;
 
     public void SetMode(OverlayMode mode)
     {
+        if (mode == OverlayMode.Edit && Mode != OverlayMode.Edit)
+            _returnMode = Mode == OverlayMode.View ? OverlayMode.View : OverlayMode.Off;
+
         Mode = mode;
 
         if (mode == OverlayMode.Off)
@@ -59,7 +70,7 @@ internal sealed class OverlayManager : IDisposable
                 _app.Config,
                 () => Mode,
                 _app.OnOverlayChanged,
-                () => _app.SetOverlayMode(OverlayMode.View));
+                _app.FinishEditing);
             window.Show();
             _windows.Add(window);
         }
