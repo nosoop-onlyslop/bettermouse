@@ -146,6 +146,38 @@ public class RemapEngineTests
     }
 
     [Fact]
+    public void EnsureDefaults_KeepsProfilesForAbsentDisplays()
+    {
+        var both = new DisplayLayout(new[]
+        {
+            Display("A", 0, 0, 1920, 1080, 96),
+            Display("B", 1920, 0, 1920, 1080, 96),
+        });
+        var config = new MouseMappingConfig();
+        config.EnsureDefaults(both);
+
+        // Author a non-default calibration for A-B.
+        var authored = config.Borders.Single(p => p.AId == "A" && p.BId == "B");
+        authored.Points = new List<ControlPoint>
+        {
+            new(0.0, 0.1),
+            new(1.0, 0.9),
+        };
+
+        // B is unplugged: the profile must be retained rather than pruned.
+        var onlyA = new DisplayLayout(new[] { Display("A", 0, 0, 1920, 1080, 96) });
+        config.EnsureDefaults(onlyA);
+        Assert.Contains(config.Borders, p => p.AId == "A" && p.BId == "B");
+
+        // B returns in the same arrangement: the authored handles are still there.
+        config.EnsureDefaults(both);
+        var restored = config.Borders.Single(p => p.AId == "A" && p.BId == "B");
+        Assert.Equal(2, restored.Points.Count);
+        Assert.Equal(0.1, restored.Points[0].B, 3);
+        Assert.Equal(0.9, restored.Points[1].B, 3);
+    }
+
+    [Fact]
     public void SharedEdge_TwoNeighbours_MapsEachSegment()
     {
         var layout = new DisplayLayout(new[]

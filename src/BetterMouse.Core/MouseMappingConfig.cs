@@ -38,15 +38,18 @@ public sealed class MouseMappingConfig
     }
 
     /// <summary>
-    /// Drop profiles whose displays are gone, and add a default profile for every adjacent
-    /// pair that does not already have a correctly-oriented one. Reuses existing profiles so
-    /// user-authored handles survive restarts.
+    /// Add a default profile for every adjacent pair that does not already have a
+    /// correctly-oriented one, and re-orient a known pair whose displays were rearranged.
+    /// Reuses existing profiles so user-authored handles survive restarts.
+    ///
+    /// Profiles for displays that are not currently attached are deliberately retained:
+    /// a monitor can be temporarily absent (a driver-reset topology collapse, or an
+    /// occasionally-connected TV or drawing tablet) and its authored handles must survive
+    /// the round trip. Such profiles are inert while absent because matching only ever runs
+    /// against the present layout. Use <see cref="ResetToDefaults"/> to discard explicitly.
     /// </summary>
     public void EnsureDefaults(DisplayLayout layout)
     {
-        var present = layout.Displays.Select(d => d.Id).ToHashSet(StringComparer.Ordinal);
-        Borders.RemoveAll(p => !present.Contains(p.AId) || !present.Contains(p.BId));
-
         foreach (var border in layout.Borders)
         {
             var matches = Borders.Where(p => p.MatchesPair(border.A.Id, border.B.Id)).ToList();

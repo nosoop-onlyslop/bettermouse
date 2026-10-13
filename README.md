@@ -143,7 +143,9 @@ Stored at `%APPDATA%\BetterMouse\config.json`. Example border:
 ```
 
 - `AId` / `BId` are stable monitor device interface paths, so settings survive reboots and
-  reconnects.
+  reconnects. Profiles for a display that is currently disconnected are retained, so an
+  occasionally-connected TV or drawing tablet keeps its calibration (and a transient
+  topology collapse, e.g. during a GPU driver update, cannot wipe it).
 - `ASide` is the edge of A that faces B (canonical `Right` or `Bottom`; `Left`/`Top` are
   never stored).
 - `Points` are normalized `[0,1]` along the two facing edges and are sorted by `A`. Points
