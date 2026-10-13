@@ -4,8 +4,13 @@
 >
 > This was designed to scratch the itch where [MouseUnSnag] had the UX I wanted (and is what
 > I use day-to-day), but [LittleBigMouse] implemented the DPI-aware border handling.
+> 
 > Additionally, I wanted an intuitive way to adjust the coordinate mapping at display edges.
+> Here's how that looks (this is a modified image from my actual setup):
+> 
+> <img width="1128" height="366" alt="image" src="https://github.com/user-attachments/assets/4de6875f-081f-4a24-a4b9-386b07fd8cc9" />
 >
+> Basically, you drag the handles up and down so they are aligned on the actual displays.
 > My initial impression is that this hits all of my targets.  All for <$0.25 in token spend.
 
 # BetterMouse
