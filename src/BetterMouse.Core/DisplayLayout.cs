@@ -38,6 +38,16 @@ public sealed class DisplayLayout
 
     public DisplayInfo? Primary => Displays.FirstOrDefault(d => d.IsPrimary) ?? Displays.FirstOrDefault();
 
+    /// <summary>
+    /// True when <paramref name="display"/> shares a straight edge with another display
+    /// across <paramref name="side"/>. This is what distinguishes a wall that Windows could
+    /// otherwise cross natively from an outer desktop edge that only clamps.
+    /// </summary>
+    public bool HasNeighbour(DisplayInfo display, Side side)
+        => Borders.Any(b =>
+            (b.A.Id == display.Id && b.ASide == side) ||
+            (b.B.Id == display.Id && b.BSide == side));
+
     private List<BorderPair> BuildBorders()
     {
         var result = new List<BorderPair>();

@@ -201,4 +201,75 @@ public class RemapEngineTests
         // unstick fallback would have produced.
         Assert.Equal(new Point(1920, 1620), cursor.Position);
     }
+
+    [Fact]
+    public void Wall_OutsideAuthoredRange_HoldsCursorOnSourceDisplay()
+    {
+        // A vertically offset left monitor beside a taller centre one (both 100%). The
+        // authored border only covers the physically-overlapping part of the shared edge;
+        // below B=0.941 there is no counterpart on the left, so that part is a wall.
+        var layout = new DisplayLayout(new[]
+        {
+            Display("L", -1280, 25, 1280, 1024, 96),
+            Display("C", 0, 0, 1920, 1080, 96),
+        });
+        var config = new MouseMappingConfig { Unstick = false, Jump = false, Wrap = false };
+        config.Borders.Add(new BorderProfile
+        {
+            AId = "L", BId = "C", ASide = Side.Right,
+            Points = { new ControlPoint(0, 0.037), new ControlPoint(1, 0.941) },
+        });
+        var engine = new RemapEngine(layout, config);
+
+        // In range: left bottom corner maps up onto the centre.
+        var cursor = new FakeCursor { Position = new Point(-1, 1048) };
+        Assert.True(engine.HandleMove(new Point(0, 1048), cursor));
+        Assert.Equal(new Point(0, 1014), cursor.Position);
+
+        // Nudge down into the wall on the centre, then try to come back.
+        Assert.False(engine.HandleMove(new Point(0, 1019), cursor));
+        cursor.Position = new Point(0, 1019); // the OS applies the ordinary move
+
+        // The reverse crossing is outside the authored range. The engine must swallow it
+        // and hold the cursor on the centre, not pass it to Windows' pixel-continuous
+        // cross-display positioning (which would land at (-1, 1019), above the corner).
+        Assert.True(engine.HandleMove(new Point(-1, 1019), cursor));
+        Assert.Equal(new Point(0, 1019), cursor.Position);
+    }
+
+    [Fact]
+    public void Wall_UnstickEnabled_StillCrossesAtRawPosition()
+    {
+        // The same wall, but with unstick on: the fallback deliberately moves the cursor
+        // onto the other display (MouseUnSnag parity), so the wall is bypassed.
+        var layout = new DisplayLayout(new[]
+        {
+            Display("L", -1280, 25, 1280, 1024, 96),
+            Display("C", 0, 0, 1920, 1080, 96),
+        });
+        var config = new MouseMappingConfig { Unstick = true, Jump = false, Wrap = false };
+        config.Borders.Add(new BorderProfile
+        {
+            AId = "L", BId = "C", ASide = Side.Right,
+            Points = { new ControlPoint(0, 0.037), new ControlPoint(1, 0.941) },
+        });
+        var engine = new RemapEngine(layout, config);
+        var cursor = new FakeCursor { Position = new Point(0, 1019) };
+
+        Assert.True(engine.HandleMove(new Point(-1, 1019), cursor));
+        Assert.Equal(new Point(-1, 1019), cursor.Position);
+    }
+
+    [Fact]
+    public void OuterEdge_NoNeighbour_PassesThroughToOs()
+    {
+        // Nothing is beyond A's left edge, so Windows only clamps; the engine leaves the
+        // event alone rather than swallowing it.
+        var engine = Build(out _, out var cursor,
+            Display("A", 0, 0, 1920, 1080, 96));
+        cursor.Position = new Point(0, 540);
+
+        Assert.False(engine.HandleMove(new Point(-1, 540), cursor));
+        Assert.Equal(new Point(0, 540), cursor.Position);
+    }
 }

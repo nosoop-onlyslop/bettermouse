@@ -64,8 +64,11 @@ with "drag handles along a single shared edge".
 - A **border** between two displays is a piecewise-linear map between the two facing edges,
   authored as normalized control points `(A, B)`. This is exactly what the handles edit.
 - Crossing: resolve the border for the exited edge, map the crossing coordinate, land just
-  inside the target display. If the border has no authored range there, it is a wall and the
-  MouseUnSnag fallbacks apply.
+  inside the target display. If the border has no authored range there, it is a wall: the
+  cursor is held on the source display, and the MouseUnSnag fallbacks (unstick/jump/wrap)
+  apply only when they are enabled. In particular, the event is swallowed rather than handed
+  back to Windows, whose own pixel-continuous cross-display positioning would otherwise
+  ignore the authored correspondence.
 
 Defaults are generated per border from resolution + scale, so most mixed-DPI setups need no
 editing at all. Where two monitors do not physically overlap, the default leaves a wall.

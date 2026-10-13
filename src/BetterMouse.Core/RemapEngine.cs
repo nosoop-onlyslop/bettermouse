@@ -76,10 +76,24 @@ public sealed class RemapEngine
         var rawDisplay = Layout.DisplayAt(raw);
         if (rawDisplay is not null && !ReferenceEquals(rawDisplay, from))
         {
-            if (!Config.Unstick)
-                return false;
-            env.SetCursorPosition(Geometry.ClosestBoundaryPoint(rawDisplay.Bounds, raw));
-            return true;
+            if (Config.Unstick)
+            {
+                env.SetCursorPosition(Geometry.ClosestBoundaryPoint(rawDisplay.Bounds, raw));
+                return true;
+            }
+
+            // Unstick is off. If this edge has a neighbour, do not hand the event back
+            // to Windows: its own pixel-continuous cross-display positioning ignores the
+            // authored correspondence and would defeat the wall. Hold the cursor on the
+            // source display instead. With no neighbour the OS only clamps, which is fine
+            // to leave to it.
+            if (Layout.HasNeighbour(from, side))
+            {
+                env.SetCursorPosition(Geometry.ClosestBoundaryPoint(from.Bounds, raw));
+                return true;
+            }
+
+            return false;
         }
 
         // 3) MouseUnSnag "jump": head for the nearest display in the direction of travel.
@@ -97,6 +111,17 @@ public sealed class RemapEngine
         if (Config.Wrap && TryWrap(from, raw, out var wrapped))
         {
             env.SetCursorPosition(wrapped);
+            return true;
+        }
+
+        // 5) No profile maps this part of the edge and no fallback applies: this is a
+        // wall. Swallow the event and hold the cursor on the source display. Returning
+        // false here would let Windows apply its own cross-display positioning, which
+        // ignores the authored correspondence (e.g. crossing back below the authored
+        // range would land at the raw pixel height instead of staying put).
+        if (Layout.HasNeighbour(from, side))
+        {
+            env.SetCursorPosition(Geometry.ClosestBoundaryPoint(from.Bounds, raw));
             return true;
         }
 
