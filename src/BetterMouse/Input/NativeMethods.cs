@@ -12,6 +12,16 @@ internal static class NativeMethods
     public const uint MDT_EFFECTIVE_DPI = 0;
     public const uint EDD_GET_DEVICE_INTERFACE_NAME = 0x00000001;
 
+    // Overlay window styles / positioning.
+    public static readonly IntPtr HWND_TOPMOST = new(-1);
+    public const uint SWP_NOACTIVATE = 0x0010;
+    public const uint SWP_SHOWWINDOW = 0x0040;
+    public const int GWL_EXSTYLE = -20;
+    public const long WS_EX_TRANSPARENT = 0x00000020L;
+    public const long WS_EX_LAYERED = 0x00080000L;
+    public const long WS_EX_TOOLWINDOW = 0x00000080L;
+    public const long WS_EX_NOACTIVATE = 0x08000000L;
+
     [StructLayout(LayoutKind.Sequential)]
     public struct POINT
     {
@@ -76,4 +86,14 @@ internal static class NativeMethods
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool EnumDisplayDevices(string? lpDevice, uint iDevNum, ref DISPLAY_DEVICE lpDisplayDevice, uint dwFlags);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags);
+
+    [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW", SetLastError = true)]
+    public static extern IntPtr GetWindowLongPtr(IntPtr hWnd, int nIndex);
+
+    [DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW", SetLastError = true)]
+    public static extern IntPtr SetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
 }

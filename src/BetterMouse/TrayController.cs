@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
+using BetterMouse.Overlay;
 
 namespace BetterMouse;
 
@@ -57,7 +58,23 @@ internal sealed class TrayController : IDisposable
             app.SaveConfig();
         };
 
-        var edit = new ToolStripMenuItem("Edit layout...");
+        var showOverlay = new ToolStripMenuItem("Show overlay");
+        var editOverlay = new ToolStripMenuItem("Edit overlay");
+
+        void SyncOverlay()
+        {
+            showOverlay.Checked = app.OverlayMode != OverlayMode.Off;
+            editOverlay.Checked = app.OverlayMode == OverlayMode.Edit;
+        }
+
+        showOverlay.Click += (_, _) => app.SetOverlayMode(
+            app.OverlayMode == OverlayMode.Off ? OverlayMode.View : OverlayMode.Off);
+        editOverlay.Click += (_, _) => app.SetOverlayMode(
+            app.OverlayMode == OverlayMode.Edit ? OverlayMode.View : OverlayMode.Edit);
+        app.OverlayModeChanged += SyncOverlay;
+        SyncOverlay();
+
+        var edit = new ToolStripMenuItem("Editor window...");
         edit.Click += (_, _) => app.ShowEditor();
 
         var reset = new ToolStripMenuItem("Reset layout to defaults");
@@ -77,6 +94,9 @@ internal sealed class TrayController : IDisposable
         menu.Items.Add(unstick);
         menu.Items.Add(jump);
         menu.Items.Add(wrap);
+        menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add(showOverlay);
+        menu.Items.Add(editOverlay);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(edit);
         menu.Items.Add(reset);

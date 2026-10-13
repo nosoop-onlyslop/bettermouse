@@ -39,19 +39,30 @@ editing at all. Where two monitors do not physically overlap, the default leaves
 The engine (`BetterMouse.Core/RemapEngine.cs`) is pure and unit-tested against a fake cursor.
 All OS access is behind `ICursorEnv`.
 
-## Layout editor
+## Physical overlay (validate on the real displays)
 
-Double-click the tray icon (or *Edit layout...*):
+This is the intended way to configure and *physically* validate the mapping. Toggled from
+the tray:
 
-- Displays are drawn at their true relative pixel positions, labelled with resolution and
-  scale.
-- Each control point appears as a paired handle on the two facing edges, joined by a dashed
-  connector. **Drag** a handle along its edge.
-- **Double-click** near an edge to add a control point there (the counterpart is placed using
-  the current mapping).
-- **Right-click** a handle to delete it (a border keeps at least two).
+- **Show overlay** — one transparent, topmost, click-through window per display, drawing each
+  border's control points on the actual monitor edges. Each handle is a perpendicular tick
+  plus a guide line spanning the whole display, so a point on one monitor can be compared
+  directly with its counterpart across the bezel. The desktop stays usable.
+- **Edit overlay** — the same overlay but interactive: **drag** a handle along its edge,
+  **double-click** an edge to add one, **right-click** a handle to delete it (a border keeps
+  at least two). A *Done editing* button appears on every display. Remapping is suspended
+  while editing.
 
-Remapping is suspended while the editor is open so the cursor never fights a drag.
+Because the handles live on the physical panels, aligning them is exactly the act of
+calibrating the physical correspondence. Changes apply live and are saved immediately.
+
+Start-up flags for scripting / quick checks: `--overlay` and `--edit-overlay`.
+
+## Editor window (overview)
+
+The **Editor window...** tray item opens a single-window overview: the same handles drawn in
+one canvas at their true relative pixel positions, useful when you want to see the whole
+arrangement at once rather than reach across monitors.
 
 ## Tray menu
 
@@ -59,7 +70,8 @@ Remapping is suspended while the editor is open so the cursor never fights a dra
 - **Unstick from corners** — if the intended position lands over another display, move there.
 - **Jump between displays** — jump to the nearest display in the direction of travel.
 - **Wrap around desktop** — wrap off the far edge to the opposite side.
-- **Edit layout...**, **Reset layout to defaults**, **Reload displays**, **Open config file**, **Exit**.
+- **Show overlay** / **Edit overlay** — the physical overlay described above.
+- **Editor window...**, **Reset layout to defaults**, **Reload displays**, **Open config file**, **Exit**.
 
 ## Configuration
 
@@ -71,6 +83,7 @@ Stored at `%APPDATA%\BetterMouse\config.json`. Example border:
   "Unstick": true,
   "Jump": true,
   "Wrap": false,
+  "ShowOverlay": false,
   "Borders": [
     {
       "AId": "\\\\?\\DISPLAY#GSM5B08#5&...",
@@ -91,6 +104,7 @@ Stored at `%APPDATA%\BetterMouse\config.json`. Example border:
   never stored).
 - `Points` are normalized `[0,1]` along the two facing edges and are sorted by `A`. Points
   outside the authored range act as a wall.
+- `ShowOverlay` remembers whether the overlay was left visible at exit.
 
 ## Build and run
 

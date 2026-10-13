@@ -1,9 +1,11 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Windows;
 using BetterMouse.Configuration;
 using BetterMouse.Core;
 using BetterMouse.Input;
+using BetterMouse.Overlay;
 using BetterMouse.Ui;
 using Microsoft.Win32;
 
@@ -15,8 +17,11 @@ public partial class App : Application
     private RemapEngine _engine = null!;
     private MouseHook _hook = null!;
     private TrayController _tray = null!;
+    private OverlayManager _overlay = null!;
     private LayoutEditorWindow? _editor;
     private bool _disposed;
+
+    public event Action? OverlayModeChanged;
 
     public DisplayLayout Layout { get; private set; } = null!;
 
@@ -44,8 +49,42 @@ public partial class App : Application
         _hook.Install();
 
         _tray = new TrayController(this);
+        _overlay = new OverlayManager(this);
+
+        // Optional start-up modes, handy for scripted/visual checks:
+        //   --overlay        show the physical overlay (click-through)
+        //   --edit-overlay   show it in interactive edit mode
+        var startEdit = e.Args.Any(a => string.Equals(a, "--edit-overlay", StringComparison.OrdinalIgnoreCase));
+        var startView = startEdit || e.Args.Any(a => string.Equals(a, "--overlay", StringComparison.OrdinalIgnoreCase));
+        if (startEdit)
+            SetOverlayMode(OverlayMode.Edit);
+        else if (startView || Config.ShowOverlay)
+            SetOverlayMode(OverlayMode.View);
 
         SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
+    }
+
+    public OverlayMode OverlayMode => _overlay?.Mode ?? OverlayMode.Off;
+
+    public void SetOverlayMode(OverlayMode mode)
+    {
+        Config.ShowOverlay = mode != OverlayMode.Off;
+        _overlay.SetMode(mode);
+        SaveConfig();
+        UpdateSuspension();
+        OverlayModeChanged?.Invoke();
+    }
+
+    /// <summary>Called by an overlay after the user edits a handle.</summary>
+    public void OnOverlayChanged()
+    {
+        SaveConfig();
+        _overlay.RefreshAll();
+    }
+
+    private void UpdateSuspension()
+    {
+        _engine.Suspended = _editor is not null || _overlay?.Mode == OverlayMode.Edit;
     }
 
     public void SaveConfig() => ConfigStore.Save(Config);
@@ -55,6 +94,7 @@ public partial class App : Application
         Layout = DisplayEnumerator.Enumerate();
         Config.EnsureDefaults(Layout);
         _engine.Layout = Layout;
+        _overlay?.Rebuild();
         SaveConfig();
     }
 
@@ -62,6 +102,7 @@ public partial class App : Application
     {
         Config.ResetToDefaults(Layout);
         SaveConfig();
+        _overlay?.RefreshAll();
     }
 
     public void ShowEditor()
@@ -72,18 +113,19 @@ public partial class App : Application
             return;
         }
 
-        _engine.Suspended = true;
         _editor = new LayoutEditorWindow(Layout, Config, () =>
         {
             _engine.Layout = Layout;
             SaveConfig();
+            _overlay?.RefreshAll();
         });
         _editor.Closed += (_, _) =>
         {
             _editor = null;
-            _engine.Suspended = false;
+            UpdateSuspension();
         };
         _editor.Show();
+        UpdateSuspension();
     }
 
     public void OpenConfigFile()
@@ -130,6 +172,7 @@ public partial class App : Application
 
         SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
         _hook?.Uninstall();
+        _overlay?.Dispose();
         _tray?.Dispose();
         _instanceMutex?.Dispose();
         _instanceMutex = null;

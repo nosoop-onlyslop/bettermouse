@@ -14,6 +14,9 @@ public sealed class MouseMappingConfig
     /// <summary>MouseUnSnag-style: wrap around the far edge of the desktop.</summary>
     public bool Wrap { get; set; }
 
+    /// <summary>Show the click-through overlay on the physical displays at startup.</summary>
+    public bool ShowOverlay { get; set; }
+
     public List<BorderProfile> Borders { get; set; } = new();
 
     public BorderProfile? Find(DisplayInfo from, Side side)

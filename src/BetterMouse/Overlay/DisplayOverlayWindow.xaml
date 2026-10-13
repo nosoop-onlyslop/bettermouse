@@ -1,0 +1,19 @@
+<Window x:Class="BetterMouse.Overlay.DisplayOverlayWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="BetterMouse Overlay"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        Topmost="True" ShowInTaskbar="False" ResizeMode="NoResize"
+        ShowActivated="False" WindowStartupLocation="Manual"
+        SnapsToDevicePixels="True" UseLayoutRounding="True">
+    <Grid>
+        <Canvas x:Name="Surface" Background="Transparent"
+                MouseLeftButtonDown="OnMouseDown"
+                MouseLeftButtonUp="OnMouseUp"
+                MouseMove="OnMouseMove"
+                MouseRightButtonDown="OnRightMouseDown" />
+        <Button x:Name="DoneButton" Content="Done editing" Visibility="Collapsed"
+                HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,10,0,0"
+                Padding="16,6" Click="OnDone" />
+    </Grid>
+</Window>
