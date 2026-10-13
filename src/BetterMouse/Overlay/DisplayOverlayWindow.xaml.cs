@@ -29,6 +29,7 @@ public partial class DisplayOverlayWindow : Window
 
     private readonly List<HandleHit> _handles = new();
     private HandleHit? _active;
+    private HandleHit? _lastHit;
 
     private sealed record HandleHit(BorderProfile Profile, int Index, bool IsA, Point CanvasPos);
 
@@ -438,12 +439,10 @@ public partial class DisplayOverlayWindow : Window
 
     // --- helpers -------------------------------------------------------------
 
-    private HandleHit? HitHandle(Point pos) => _handles
-        .Select(h => (Hit: h, Distance: (h.CanvasPos - pos).Length))
-        .Where(x => x.Distance <= 12)
-        .OrderBy(x => x.Distance)
-        .Select(x => x.Hit)
-        .FirstOrDefault();
+    private HandleHit? HitHandle(Point pos) => HandleHitTester.Pick(
+        _handles.Select(h => (h, (h.CanvasPos - pos).Length)).ToList(),
+        12,
+        ref _lastHit);
 
     private static (double X, double Y) EdgeLocalPixels(Side side, double n, int w, int h)
     {

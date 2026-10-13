@@ -26,6 +26,7 @@ public partial class LayoutEditorWindow : Window
 
     private readonly List<HandleHit> _handles = new();
     private HandleHit? _active;
+    private HandleHit? _lastHit;
 
     private double _scale = 1;
     private double _offsetX;
@@ -308,12 +309,10 @@ public partial class LayoutEditorWindow : Window
         Render();
     }
 
-    private HandleHit? HitHandle(Point pos) => _handles
-        .Select(h => (Hit: h, Dist: (h.CanvasPos - pos).Length))
-        .Where(x => x.Dist <= 9)
-        .OrderBy(x => x.Dist)
-        .Select(x => x.Hit)
-        .FirstOrDefault();
+    private HandleHit? HitHandle(Point pos) => HandleHitTester.Pick(
+        _handles.Select(h => (h, (h.CanvasPos - pos).Length)).ToList(),
+        9,
+        ref _lastHit);
 
     private void OnSave(object sender, RoutedEventArgs e) => _changed();
 
