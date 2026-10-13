@@ -18,7 +18,7 @@
 >
 > <img width="1088" height="270" alt="image" src="https://github.com/user-attachments/assets/1231f918-fcae-404f-9190-1bc60e8d55fd" />
 > 
-> My initial impression is that this hits all of my targets.  All for ~$0.38 USD in token spend.
+> My initial impression is that this hits all of my targets.  All for ~$0.56 USD in token spend.
 >
 > Has no relation to other applications named BetterMouse.  Surely not a name that can be
 > registered, right?
