@@ -65,7 +65,7 @@ public sealed class RemapEngine
         var side = DominantSide(from.Bounds, raw);
         foreach (var profile in Config.FindAll(from, side))
         {
-            if (TryMap(profile, from, side, raw, out var landing))
+            if (TryMap(profile, from, side, raw, clamp: false, out var landing))
             {
                 env.SetCursorPosition(landing);
                 return true;
@@ -78,6 +78,22 @@ public sealed class RemapEngine
         {
             if (Config.Unstick)
             {
+                // This is a wall crossing (no profile covered the coordinate). Cross it
+                // anyway, but land at the nearest authored point on the border to the
+                // display the raw is over, so the cursor keeps the physically-corresponding
+                // height instead of the raw pixel height (a vertical jump on offset
+                // monitors). Fall back to the raw position only when no such border exists.
+                foreach (var profile in Config.FindAll(from, side))
+                {
+                    if (profile.OtherId(from.Id, side) != rawDisplay.Id)
+                        continue;
+                    if (TryMap(profile, from, side, raw, clamp: true, out var landing))
+                    {
+                        env.SetCursorPosition(landing);
+                        return true;
+                    }
+                }
+
                 env.SetCursorPosition(Geometry.ClosestBoundaryPoint(rawDisplay.Bounds, raw));
                 return true;
             }
@@ -128,7 +144,8 @@ public sealed class RemapEngine
         return false;
     }
 
-    private bool TryMap(BorderProfile profile, DisplayInfo from, Side side, Point raw, out Point landing)
+    private bool TryMap(
+        BorderProfile profile, DisplayInfo from, Side side, Point raw, bool clamp, out Point landing)
     {
         landing = default;
 
@@ -138,7 +155,9 @@ public sealed class RemapEngine
             return false;
 
         var t = NormalizeOnEdge(from.Bounds, side, raw);
-        var u = forward ? profile.MapAToB(t) : profile.MapBToA(t);
+        var u = forward
+            ? (clamp ? profile.MapAToBClamped(t) : profile.MapAToB(t))
+            : (clamp ? profile.MapBToAClamped(t) : profile.MapBToA(t));
         if (double.IsNaN(u))
             return false;
 

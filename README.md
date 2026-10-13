@@ -69,6 +69,10 @@ with "drag handles along a single shared edge".
   apply only when they are enabled. In particular, the event is swallowed rather than handed
   back to Windows, whose own pixel-continuous cross-display positioning would otherwise
   ignore the authored correspondence.
+- A wall crossing with **unstick** enabled lands at the nearest authored point on that border
+  (the clamp of the crossing coordinate), so the cursor keeps the physically-corresponding
+  height rather than the raw pixel height. Where no border exists, unstick keeps MouseUnSnag's
+  raw-position behaviour.
 
 Defaults are generated per border from resolution + scale, so most mixed-DPI setups need no
 editing at all. Where two monitors do not physically overlap, the default leaves a wall.

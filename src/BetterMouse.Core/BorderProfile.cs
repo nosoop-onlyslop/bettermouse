@@ -43,6 +43,18 @@ public sealed class BorderProfile
     public bool MatchesPair(string id1, string id2)
         => (AId == id1 && BId == id2) || (AId == id2 && BId == id1);
 
+    /// <summary>
+    /// The display on the far side of this border when crossing out of
+    /// <paramref name="fromId"/> across <paramref name="side"/>, or null when this profile
+    /// does not describe that crossing.
+    /// </summary>
+    public string? OtherId(string fromId, Side side)
+    {
+        if (AId == fromId && ASide == side) return BId;
+        if (BId == fromId && BSide == side) return AId;
+        return null;
+    }
+
     /// <summary>Sort by A and clamp everything into [0,1].</summary>
     public void Normalize()
     {
@@ -108,5 +120,29 @@ public sealed class BorderProfile
         }
 
         return pts[^1].A;
+    }
+
+    /// <summary>
+    /// Like <see cref="MapAToB"/> but clamps to the nearest authored point instead of
+    /// returning <see cref="double.NaN"/> outside the authored range. A fallback that
+    /// deliberately crosses a wall (unstick) uses this so it still lands at the
+    /// physically-corresponding height rather than the raw pixel height.
+    /// </summary>
+    public double MapAToBClamped(double a)
+    {
+        if (Points.Count == 0) return double.NaN;
+        if (a < Points[0].A) return Points[0].B;
+        if (a > Points[^1].A) return Points[^1].B;
+        return MapAToB(a);
+    }
+
+    /// <summary>Clamped inverse of <see cref="MapAToB"/> (see <see cref="MapAToBClamped"/>).</summary>
+    public double MapBToAClamped(double b)
+    {
+        if (Points.Count == 0) return double.NaN;
+        var pts = Points.OrderBy(p => p.B).ToList();
+        if (b < pts[0].B) return pts[0].A;
+        if (b > pts[^1].B) return pts[^1].A;
+        return MapBToA(b);
     }
 }

@@ -238,10 +238,11 @@ public class RemapEngineTests
     }
 
     [Fact]
-    public void Wall_UnstickEnabled_StillCrossesAtRawPosition()
+    public void Wall_UnstickEnabled_MapsThroughNearestAuthoredPoint()
     {
-        // The same wall, but with unstick on: the fallback deliberately moves the cursor
-        // onto the other display (MouseUnSnag parity), so the wall is bypassed.
+        // The same wall, but with unstick on: the fallback deliberately crosses it, but
+        // must land at the physically-corresponding point (the left corner), not the raw
+        // pixel height on the neighbour (which is a vertical jump).
         var layout = new DisplayLayout(new[]
         {
             Display("L", -1280, 25, 1280, 1024, 96),
@@ -257,7 +258,29 @@ public class RemapEngineTests
         var cursor = new FakeCursor { Position = new Point(0, 1019) };
 
         Assert.True(engine.HandleMove(new Point(-1, 1019), cursor));
-        Assert.Equal(new Point(-1, 1019), cursor.Position);
+        Assert.Equal(new Point(-1, 1048), cursor.Position);
+    }
+
+    [Fact]
+    public void Wall_UnstickEnabled_NoBorder_FallsBackToRawPosition()
+    {
+        // The displays share an edge, but at these scales their physical extents barely
+        // overlap, so no default border is authored. Unstick has nothing to map through
+        // and keeps MouseUnSnag's raw-position behaviour.
+        var layout = new DisplayLayout(new[]
+        {
+            Display("A", 0, 0, 100, 1000, 96),
+            Display("B", 100, 0, 4, 4, 768),
+        });
+        var config = new MouseMappingConfig { Unstick = true, Jump = false, Wrap = false };
+        config.EnsureDefaults(layout);
+        Assert.Empty(config.Borders);
+
+        var engine = new RemapEngine(layout, config);
+        var cursor = new FakeCursor { Position = new Point(50, 500) };
+
+        Assert.True(engine.HandleMove(new Point(101, 2), cursor));
+        Assert.Equal(new Point(101, 2), cursor.Position);
     }
 
     [Fact]
