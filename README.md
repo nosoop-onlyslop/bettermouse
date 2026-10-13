@@ -1,3 +1,13 @@
+> [!NOTE]
+>
+> Human-written foreword:
+>
+> This was designed to scratch the itch where [MouseUnSnag] had the UX I wanted (and is what
+> I use day-to-day), but [LittleBigMouse] implemented the DPI-aware border handling.
+> Additionally, I wanted an intuitive way to adjust the coordinate mapping at display edges.
+>
+> My initial impression is that this hits all of my targets.  All for <$0.25 in token spend.
+
 # BetterMouse
 
 A minimal Windows tray application that remaps the mouse **position** as it crosses between
