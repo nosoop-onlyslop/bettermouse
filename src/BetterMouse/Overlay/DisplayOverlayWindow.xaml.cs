@@ -287,8 +287,7 @@ public partial class DisplayOverlayWindow : Window
                 Foreground = handleBrush,
                 FontSize = 11,
             };
-            Canvas.SetLeft(pct, knobX * DipScale + 10);
-            Canvas.SetTop(pct, knobY * DipScale - 18);
+            PlaceLabel(pct, w, h, knobX, knobY, DipScale);
             Surface.Children.Add(pct);
 
             _handles.Add(new HandleHit(profile, i, isA, new Point(knobX * DipScale, knobY * DipScale)));
@@ -443,6 +442,27 @@ public partial class DisplayOverlayWindow : Window
         _handles.Select(h => (h, (h.CanvasPos - pos).Length)).ToList(),
         12,
         ref _lastHit);
+
+    /// <summary>
+    /// Put the percent label in the quadrant of the knob that faces the display centre, so
+    /// it stays on-screen (the old fixed top-right placement clipped on the top/right edges)
+    /// and never sits over the bezel.
+    /// </summary>
+    private static void PlaceLabel(TextBlock label, int w, int h, double knobX, double knobY, double dipScale)
+    {
+        label.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+        var size = label.DesiredSize;
+
+        var x = knobX * dipScale;
+        var y = knobY * dipScale;
+        const double gap = 10;
+
+        var left = knobX < w / 2.0 ? x + gap : x - gap - size.Width;
+        var top = knobY < h / 2.0 ? y + gap : y - gap - size.Height;
+
+        Canvas.SetLeft(label, left);
+        Canvas.SetTop(label, top);
+    }
 
     private static (double X, double Y) EdgeLocalPixels(Side side, double n, int w, int h)
     {
