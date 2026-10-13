@@ -15,6 +15,9 @@
 > up where you expect it to be.
 > 
 > My initial impression is that this hits all of my targets.  All for <$0.25 in token spend.
+>
+> Has no relation to other applications named BetterMouse.  Surely not a name that can be
+> registered, right?
 
 # BetterMouse
 
