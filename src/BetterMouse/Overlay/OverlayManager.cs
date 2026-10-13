@@ -67,6 +67,7 @@ internal sealed class OverlayManager : IDisposable
         {
             var window = new DisplayOverlayWindow(
                 display,
+                _app.Layout,
                 _app.Config,
                 () => Mode,
                 _app.OnOverlayChanged,

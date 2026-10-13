@@ -21,6 +21,7 @@ namespace BetterMouse.Overlay;
 public partial class DisplayOverlayWindow : Window
 {
     private readonly DisplayInfo _display;
+    private readonly DisplayLayout _layout;
     private readonly MouseMappingConfig _config;
     private readonly Func<OverlayMode> _mode;
     private readonly Action _changed;
@@ -36,6 +37,7 @@ public partial class DisplayOverlayWindow : Window
 
     public DisplayOverlayWindow(
         DisplayInfo display,
+        DisplayLayout layout,
         MouseMappingConfig config,
         Func<OverlayMode> mode,
         Action changed,
@@ -44,6 +46,7 @@ public partial class DisplayOverlayWindow : Window
         InitializeComponent();
 
         _display = display;
+        _layout = layout;
         _config = config;
         _mode = mode;
         _changed = changed;
@@ -161,19 +164,20 @@ public partial class DisplayOverlayWindow : Window
         Canvas.SetTop(label, 12);
         Surface.Children.Add(label);
 
-        foreach (var profile in _config.Borders)
+        for (var i = 0; i < _config.Borders.Count; i++)
         {
+            var profile = _config.Borders[i];
             if (profile.AId == _display.Id)
-                DrawProfile(profile, true, w, h, cw, ch);
+                DrawProfile(profile, true, i, w, h, cw, ch);
             else if (profile.BId == _display.Id)
-                DrawProfile(profile, false, w, h, cw, ch);
+                DrawProfile(profile, false, i, w, h, cw, ch);
         }
     }
 
-    private void DrawProfile(BorderProfile profile, bool isA, int w, int h, double cw, double ch)
+    private void DrawProfile(BorderProfile profile, bool isA, int colorIndex, int w, int h, double cw, double ch)
     {
         var side = isA ? profile.ASide : profile.BSide;
-        var color = isA ? Color.FromRgb(0x4E, 0xC9, 0xB0) : Color.FromRgb(0xE0, 0x9F, 0x3E);
+        var color = BorderPalette.For(colorIndex, isA);
         var handleBrush = new SolidColorBrush(color);
         var guideBrush = new SolidColorBrush(Color.FromArgb(0x38, color.R, color.G, color.B));
 
@@ -181,6 +185,30 @@ public partial class DisplayOverlayWindow : Window
         {
             var n = isA ? profile.Points[i].A : profile.Points[i].B;
             var (ex, ey) = EdgeLocalPixels(side, n, w, h);
+
+            // Dashed link to the counterpart handle on the neighbour display. The far end
+            // normally lies outside this window, so the line is clipped at the display
+            // edge; the neighbour's overlay draws the mirror half and the two meet across
+            // the bezel. Same profile hue on both sides.
+            var other = _layout.ById(isA ? profile.BId : profile.AId);
+            if (other is not null)
+            {
+                var otherSide = isA ? profile.BSide : profile.ASide;
+                var otherN = isA ? profile.Points[i].B : profile.Points[i].A;
+                var (ox, oy) = EdgeLocalPixels(otherSide, otherN, other.Width, other.Height);
+                var dx = other.Bounds.Left + ox - _display.Bounds.Left;
+                var dy = other.Bounds.Top + oy - _display.Bounds.Top;
+                Surface.Children.Add(new Line
+                {
+                    X1 = ex * DipScale,
+                    Y1 = ey * DipScale,
+                    X2 = dx * DipScale,
+                    Y2 = dy * DipScale,
+                    Stroke = new SolidColorBrush(Color.FromArgb(0x80, color.R, color.G, color.B)),
+                    StrokeThickness = 1,
+                    StrokeDashArray = new DoubleCollection { 3, 3 },
+                });
+            }
 
             const double tick = 54;
             const double knobInset = 16;

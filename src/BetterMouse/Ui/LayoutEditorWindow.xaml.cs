@@ -7,6 +7,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using BetterMouse.Core;
+using BetterMouse.Overlay;
 using DPoint = System.Drawing.Point;
 using DRect = System.Drawing.Rectangle;
 
@@ -70,8 +71,8 @@ public partial class LayoutEditorWindow : Window
         foreach (var display in _layout.Displays)
             DrawDisplay(display);
 
-        foreach (var profile in _config.Borders)
-            DrawProfile(profile);
+        for (var i = 0; i < _config.Borders.Count; i++)
+            DrawProfile(_config.Borders[i], i);
     }
 
     private void DrawDisplay(DisplayInfo d)
@@ -103,12 +104,14 @@ public partial class LayoutEditorWindow : Window
         Surface.Children.Add(label);
     }
 
-    private void DrawProfile(BorderProfile profile)
+    private void DrawProfile(BorderProfile profile, int colorIndex)
     {
         var a = _layout.ById(profile.AId);
         var b = _layout.ById(profile.BId);
         if (a is null || b is null)
             return;
+
+        var connectorColor = BorderPalette.For(colorIndex, true);
 
         for (var i = 0; i < profile.Points.Count; i++)
         {
@@ -122,13 +125,13 @@ public partial class LayoutEditorWindow : Window
                 Y1 = aCanvas.Y,
                 X2 = bCanvas.X,
                 Y2 = bCanvas.Y,
-                Stroke = new SolidColorBrush(Color.FromArgb(0x80, 0x4E, 0xC9, 0xB0)),
+                Stroke = new SolidColorBrush(Color.FromArgb(0x80, connectorColor.R, connectorColor.G, connectorColor.B)),
                 StrokeThickness = 1,
                 StrokeDashArray = new DoubleCollection { 3, 3 },
             });
 
-            AddHandle(profile, i, true, aCanvas, Color.FromRgb(0x4E, 0xC9, 0xB0));
-            AddHandle(profile, i, false, bCanvas, Color.FromRgb(0xE0, 0x9F, 0x3E));
+            AddHandle(profile, i, true, aCanvas, BorderPalette.For(colorIndex, true));
+            AddHandle(profile, i, false, bCanvas, BorderPalette.For(colorIndex, false));
         }
     }
 
