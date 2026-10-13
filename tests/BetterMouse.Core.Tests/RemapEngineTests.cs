@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using BetterMouse.Core;
 using Xunit;
 
@@ -118,5 +119,86 @@ public class RemapEngineTests
         Assert.True(engine.HandleMove(new Point(1921, 540), cursor));
         cursor.Position = new Point(1920, 540);
         Assert.False(engine.HandleMove(new Point(1921, 540), cursor));
+    }
+
+    [Fact]
+    public void EnsureDefaults_KeepsBothProfilesSharingOneDisplayEdge()
+    {
+        // A tall monitor on the left; two stacked monitors on the right both share A's edge.
+        var layout = new DisplayLayout(new[]
+        {
+            Display("A", 0, 0, 1920, 2160, 96),
+            Display("B", 1920, 0, 1920, 1080, 96),
+            Display("C", 1920, 1080, 1920, 1080, 96),
+        });
+        var config = new MouseMappingConfig();
+        config.EnsureDefaults(layout);
+
+        // A-B and A-C share A's right edge; B-C also share a horizontal edge, so three
+        // profiles exist in total and must all survive regeneration.
+        Assert.Contains(config.Borders, p => p.AId == "A" && p.BId == "B");
+        Assert.Contains(config.Borders, p => p.AId == "A" && p.BId == "C");
+        Assert.Contains(config.Borders, p => p.AId == "B" && p.BId == "C");
+
+        // Both are outgoing from A's right edge, so the engine must offer two candidates.
+        var from = layout.ById("A")!;
+        Assert.Equal(2, config.FindAll(from, Side.Right).Count());
+    }
+
+    [Fact]
+    public void SharedEdge_TwoNeighbours_MapsEachSegment()
+    {
+        var layout = new DisplayLayout(new[]
+        {
+            Display("A", 0, 0, 1920, 2160, 96),
+            Display("B", 1920, 0, 1920, 1080, 96),
+            Display("C", 1920, 1080, 1920, 1080, 96),
+        });
+        // Isolate the border map from the unstick/jump fallbacks.
+        var config = new MouseMappingConfig { Unstick = false, Jump = false, Wrap = false };
+        config.EnsureDefaults(layout);
+        var engine = new RemapEngine(layout, config);
+        var cursor = new FakeCursor();
+
+        // A -> B (upper segment).
+        cursor.Position = new Point(1919, 400);
+        Assert.True(engine.HandleMove(new Point(1921, 400), cursor));
+        Assert.Equal(new Point(1920, 400), cursor.Position);
+
+        // A -> C (lower segment) must use C's profile, not just fall back to unstick.
+        cursor.Position = new Point(1919, 1600);
+        Assert.True(engine.HandleMove(new Point(1921, 1600), cursor));
+        Assert.Equal(new Point(1920, 1600), cursor.Position);
+
+        // ...and back, each neighbour resolving through its own profile.
+        cursor.Position = new Point(1921, 400);
+        Assert.True(engine.HandleMove(new Point(1919, 400), cursor));
+        Assert.Equal(new Point(1919, 400), cursor.Position);
+
+        cursor.Position = new Point(1921, 1600);
+        Assert.True(engine.HandleMove(new Point(1919, 1600), cursor));
+        Assert.Equal(new Point(1919, 1599), cursor.Position);
+    }
+
+    [Fact]
+    public void SharedEdge_SecondNeighbour_MixedDpi_AppliesPhysicalCorrespondence()
+    {
+        var layout = new DisplayLayout(new[]
+        {
+            Display("A", 0, 0, 1920, 2160, 96),
+            Display("B", 1920, 0, 1920, 1080, 96),
+            Display("C", 1920, 1080, 1920, 1080, 192), // C is at 200% scaling.
+        });
+        var config = new MouseMappingConfig { Unstick = false, Jump = false, Wrap = false };
+        config.EnsureDefaults(layout);
+        var engine = new RemapEngine(layout, config);
+        var cursor = new FakeCursor { Position = new Point(1919, 1350) };
+
+        Assert.True(engine.HandleMove(new Point(1921, 1350), cursor));
+
+        // A at 100%: y=1350 is physical y=1350. C at 200% maps the shared physical offset
+        // to mid-height on C, so the corrected landing is y=1620, not the raw 1350 the
+        // unstick fallback would have produced.
+        Assert.Equal(new Point(1920, 1620), cursor.Position);
     }
 }

@@ -58,13 +58,18 @@ public sealed class RemapEngine
         if (from.Bounds.Contains(raw))
             return false;
 
-        // 1) Straight border crossing: apply the authored DPI correspondence.
+        // 1) Straight border crossing: apply the authored DPI correspondence. A single
+        // edge may face several neighbours (e.g. a tall monitor beside two stacked ones),
+        // so try every candidate profile; only the one whose authored range covers this
+        // coordinate maps, and the rest fall through to the fallbacks below.
         var side = DominantSide(from.Bounds, raw);
-        var profile = Config.Find(from, side);
-        if (profile is not null && TryMap(profile, from, side, raw, out var landing))
+        foreach (var profile in Config.FindAll(from, side))
         {
-            env.SetCursorPosition(landing);
-            return true;
+            if (TryMap(profile, from, side, raw, out var landing))
+            {
+                env.SetCursorPosition(landing);
+                return true;
+            }
         }
 
         // 2) MouseUnSnag "unstick": the intended point is already over another display.

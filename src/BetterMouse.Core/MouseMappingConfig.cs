@@ -19,15 +19,22 @@ public sealed class MouseMappingConfig
 
     public List<BorderProfile> Borders { get; set; } = new();
 
-    public BorderProfile? Find(DisplayInfo from, Side side)
+    /// <summary>The first profile describing a crossing out of <paramref name="from"/> on <paramref name="side"/>.</summary>
+    public BorderProfile? Find(DisplayInfo from, Side side) => FindAll(from, side).FirstOrDefault();
+
+    /// <summary>
+    /// Every profile describing a crossing out of <paramref name="from"/> on
+    /// <paramref name="side"/>. A single display edge can face more than one neighbour (e.g.
+    /// a tall monitor beside two stacked ones), so callers must consider all candidates and
+    /// let the one whose authored range covers the crossing coordinate win.
+    /// </summary>
+    public IEnumerable<BorderProfile> FindAll(DisplayInfo from, Side side)
     {
         foreach (var p in Borders)
         {
-            if (p.AId == from.Id && p.ASide == side) return p;
-            if (p.BId == from.Id && p.BSide == side) return p;
+            if (p.AId == from.Id && p.ASide == side) yield return p;
+            else if (p.BId == from.Id && p.BSide == side) yield return p;
         }
-
-        return null;
     }
 
     /// <summary>

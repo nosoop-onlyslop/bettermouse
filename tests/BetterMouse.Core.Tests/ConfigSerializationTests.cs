@@ -53,4 +53,35 @@ public class ConfigSerializationTests
         Assert.Equal(0.4, border.Points[1].A, 6);
         Assert.Equal(0.65, border.Points[1].B, 6);
     }
+
+    [Fact]
+    public void RoundTripsTwoBordersSharingOneDisplayEdge()
+    {
+        // Formats already emitted by older versions must keep loading unchanged when a
+        // display edge faces two neighbours.
+        var config = new MouseMappingConfig();
+        config.Borders.Add(new BorderProfile
+        {
+            AId = "tall",
+            BId = "top",
+            ASide = Side.Right,
+            Points = { new ControlPoint(0, 0), new ControlPoint(0.5, 1) },
+        });
+        config.Borders.Add(new BorderProfile
+        {
+            AId = "tall",
+            BId = "bottom",
+            ASide = Side.Right,
+            Points = { new ControlPoint(0.5, 0), new ControlPoint(1, 1) },
+        });
+
+        var json = JsonSerializer.Serialize(config, Options);
+        var restored = JsonSerializer.Deserialize<MouseMappingConfig>(json, Options);
+
+        Assert.NotNull(restored);
+        Assert.Equal(2, restored!.Borders.Count);
+        Assert.All(restored.Borders, p => Assert.Equal("tall", p.AId));
+        Assert.Contains(restored.Borders, p => p.BId == "top");
+        Assert.Contains(restored.Borders, p => p.BId == "bottom");
+    }
 }
