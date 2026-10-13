@@ -221,20 +221,20 @@ public class RemapEngineTests
         });
         var engine = new RemapEngine(layout, config);
 
-        // In range: left bottom corner maps up onto the centre.
-        var cursor = new FakeCursor { Position = new Point(-1, 1048) };
-        Assert.True(engine.HandleMove(new Point(0, 1048), cursor));
-        Assert.Equal(new Point(0, 1014), cursor.Position);
+        // In range: a point on the left edge maps onto the centre.
+        var cursor = new FakeCursor { Position = new Point(-1, 1000) };
+        Assert.True(engine.HandleMove(new Point(0, 1000), cursor));
+        Assert.Equal(new Point(0, 969), cursor.Position);
 
-        // Nudge down into the wall on the centre, then try to come back.
-        Assert.False(engine.HandleMove(new Point(0, 1019), cursor));
-        cursor.Position = new Point(0, 1019); // the OS applies the ordinary move
+        // Move down into the wall on the centre, then try to come back.
+        Assert.False(engine.HandleMove(new Point(0, 1020), cursor));
+        cursor.Position = new Point(0, 1020); // the OS applies the ordinary move
 
         // The reverse crossing is outside the authored range. The engine must swallow it
         // and hold the cursor on the centre, not pass it to Windows' pixel-continuous
-        // cross-display positioning (which would land at (-1, 1019), above the corner).
-        Assert.True(engine.HandleMove(new Point(-1, 1019), cursor));
-        Assert.Equal(new Point(0, 1019), cursor.Position);
+        // cross-display positioning (which would land at (-1, 1020)).
+        Assert.True(engine.HandleMove(new Point(-1, 1020), cursor));
+        Assert.Equal(new Point(0, 1020), cursor.Position);
     }
 
     [Fact]
@@ -294,5 +294,58 @@ public class RemapEngineTests
 
         Assert.False(engine.HandleMove(new Point(-1, 540), cursor));
         Assert.Equal(new Point(0, 540), cursor.Position);
+    }
+
+    private static RemapEngine CornerEngine(bool unstick)
+    {
+        var layout = new DisplayLayout(new[]
+        {
+            Display("L", -1280, 25, 1280, 1024, 96),
+            Display("C", 0, 0, 1920, 1080, 96),
+        });
+        var config = new MouseMappingConfig { Unstick = unstick, Jump = false, Wrap = false };
+        config.Borders.Add(new BorderProfile
+        {
+            AId = "L", BId = "C", ASide = Side.Right,
+            Points = { new ControlPoint(0, 0.037), new ControlPoint(1, 0.941) },
+        });
+        return new RemapEngine(layout, config);
+    }
+
+    [Fact]
+    public void StickyCorner_UnstickOff_LeavesCornerToWindows()
+    {
+        // The cursor is at the bottom-right corner of L and the intended position is
+        // diagonally off it. With unstick off this must not be remapped: Windows' own
+        // sticky-corner behaviour keeps the cursor there.
+        var engine = CornerEngine(unstick: false);
+        var cursor = new FakeCursor { Position = new Point(-1, 1048) };
+
+        Assert.False(engine.HandleMove(new Point(19, 1050), cursor));
+        Assert.Equal(new Point(-1, 1048), cursor.Position);
+    }
+
+    [Fact]
+    public void StickyCorner_UnstickOff_NearCornerDiagonal_LeavesCornerToWindows()
+    {
+        // Same, but the cursor is a couple of pixels up the edge rather than exactly on
+        // the corner; the intended move is still diagonally past the corner.
+        var engine = CornerEngine(unstick: false);
+        var cursor = new FakeCursor { Position = new Point(-1, 1046) };
+
+        Assert.False(engine.HandleMove(new Point(19, 1050), cursor));
+        Assert.Equal(new Point(-1, 1046), cursor.Position);
+    }
+
+    [Fact]
+    public void StickyCorner_UnstickOn_CrossesToNearestAuthoredPoint()
+    {
+        // With unstick on the fallback deliberately crosses the corner, landing at the
+        // nearest authored point on the border (the bottom of the centre edge).
+        var engine = CornerEngine(unstick: true);
+        var cursor = new FakeCursor { Position = new Point(-1, 1048) };
+
+        Assert.True(engine.HandleMove(new Point(19, 1050), cursor));
+        Assert.Equal(new Point(0, 1015), cursor.Position);
     }
 }

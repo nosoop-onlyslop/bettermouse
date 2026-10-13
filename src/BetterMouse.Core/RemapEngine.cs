@@ -63,12 +63,28 @@ public sealed class RemapEngine
         // so try every candidate profile; only the one whose authored range covers this
         // coordinate maps, and the rest fall through to the fallbacks below.
         var side = DominantSide(from.Bounds, raw);
-        foreach (var profile in Config.FindAll(from, side))
+
+        // A move off a display corner (or a diagonal move past one) is where Windows'
+        // sticky-corner behaviour lives. Do not preempt it with the straight-border
+        // mapping: with unstick off the OS keeps the cursor there, and with unstick on
+        // the fallback below deliberately crosses.
+        var atCorner =
+            (cursor.X <= from.Bounds.Left || cursor.X >= from.Bounds.Right - 1) &&
+            (cursor.Y <= from.Bounds.Top || cursor.Y >= from.Bounds.Bottom - 1);
+        var outsideBoth =
+            Geometry.OutsideXDistance(from.Bounds, raw) != 0 &&
+            Geometry.OutsideYDistance(from.Bounds, raw) != 0;
+        var isCorner = atCorner || outsideBoth;
+
+        if (!isCorner)
         {
-            if (TryMap(profile, from, side, raw, clamp: false, out var landing))
+            foreach (var profile in Config.FindAll(from, side))
             {
-                env.SetCursorPosition(landing);
-                return true;
+                if (TryMap(profile, from, side, raw, clamp: false, out var landing))
+                {
+                    env.SetCursorPosition(landing);
+                    return true;
+                }
             }
         }
 
@@ -78,11 +94,11 @@ public sealed class RemapEngine
         {
             if (Config.Unstick)
             {
-                // This is a wall crossing (no profile covered the coordinate). Cross it
-                // anyway, but land at the nearest authored point on the border to the
-                // display the raw is over, so the cursor keeps the physically-corresponding
-                // height instead of the raw pixel height (a vertical jump on offset
-                // monitors). Fall back to the raw position only when no such border exists.
+                // This is a wall or corner crossing (no profile covered the coordinate).
+                // Cross it anyway, but land at the nearest authored point on the border to
+                // the display the raw is over, so the cursor keeps the physically-
+                // corresponding height instead of the raw pixel height (a vertical jump on
+                // offset monitors). Fall back to the raw position only when no border exists.
                 foreach (var profile in Config.FindAll(from, side))
                 {
                     if (profile.OtherId(from.Id, side) != rawDisplay.Id)
@@ -98,11 +114,15 @@ public sealed class RemapEngine
                 return true;
             }
 
-            // Unstick is off. If this edge has a neighbour, do not hand the event back
-            // to Windows: its own pixel-continuous cross-display positioning ignores the
-            // authored correspondence and would defeat the wall. Hold the cursor on the
+            // Unstick is off. At a corner, leave the event to Windows so its sticky-corner
+            // behaviour is preserved. On a straight edge with a neighbour, do not hand the
+            // event back: Windows' own pixel-continuous cross-display positioning ignores
+            // the authored correspondence and would defeat the wall. Hold the cursor on the
             // source display instead. With no neighbour the OS only clamps, which is fine
             // to leave to it.
+            if (isCorner)
+                return false;
+
             if (Layout.HasNeighbour(from, side))
             {
                 env.SetCursorPosition(Geometry.ClosestBoundaryPoint(from.Bounds, raw));
@@ -134,8 +154,9 @@ public sealed class RemapEngine
         // wall. Swallow the event and hold the cursor on the source display. Returning
         // false here would let Windows apply its own cross-display positioning, which
         // ignores the authored correspondence (e.g. crossing back below the authored
-        // range would land at the raw pixel height instead of staying put).
-        if (Layout.HasNeighbour(from, side))
+        // range would land at the raw pixel height instead of staying put). Corners are
+        // the exception: Windows' sticky-corner behaviour handles those.
+        if (!isCorner && Layout.HasNeighbour(from, side))
         {
             env.SetCursorPosition(Geometry.ClosestBoundaryPoint(from.Bounds, raw));
             return true;
