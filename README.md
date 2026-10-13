@@ -10,11 +10,15 @@
 > 
 > <img width="1120" height="270" alt="image" src="https://github.com/user-attachments/assets/0eba96ca-036c-479a-881c-0d01df6c87da" />
 >
-> These are drawn as fullscreen overlays.  Basically, you drag the handles up and down so
-> they are aligned on the actual displays; the application then maps them so the mouse ends
-> up where you expect it to be.
+> These are drawn as fullscreen overlays.  Basically, you drag the handles across the edge so
+> they are visually lined up on the actual displays; the application then maps them so the mouse
+> ends up where you expect it to be.  While the above is a capture of the desktop, here's an
+> approximation of what I actually see &mdash; notice how the displays are rescaled so the
+> handles are lined up:
+>
+> <img width="1088" height="270" alt="image" src="https://github.com/user-attachments/assets/1231f918-fcae-404f-9190-1bc60e8d55fd" />
 > 
-> My initial impression is that this hits all of my targets.  All for <$0.25 in token spend.
+> My initial impression is that this hits all of my targets.  All for ~$0.38 USD in token spend.
 >
 > Has no relation to other applications named BetterMouse.  Surely not a name that can be
 > registered, right?
