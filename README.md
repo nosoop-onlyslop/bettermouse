@@ -6,9 +6,9 @@
 > I use day-to-day), but [LittleBigMouse] implemented the DPI-aware border handling.
 > 
 > Additionally, I wanted an intuitive way to adjust the coordinate mapping at display edges.
-> Here's how that looks (this is a modified image from my actual setup):
+> Here's how that looks (from my actual setup, scaled down with proportions intact):
 > 
-> <img width="1128" height="366" alt="image" src="https://github.com/user-attachments/assets/4de6875f-081f-4a24-a4b9-386b07fd8cc9" />
+> <img width="1120" height="270" alt="image" src="https://github.com/user-attachments/assets/0eba96ca-036c-479a-881c-0d01df6c87da" />
 >
 > These are drawn as fullscreen overlays.  Basically, you drag the handles up and down so
 > they are aligned on the actual displays; the application then maps them so the mouse ends
