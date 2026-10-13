@@ -20,7 +20,7 @@ namespace BetterMouse.Ui;
 /// </summary>
 public partial class LayoutEditorWindow : Window
 {
-    private readonly DisplayLayout _layout;
+    private DisplayLayout _layout;
     private readonly MouseMappingConfig _config;
     private readonly Action _changed;
 
@@ -43,6 +43,27 @@ public partial class LayoutEditorWindow : Window
 
         Loaded += (_, _) => Render();
         SizeChanged += (_, _) => Render();
+    }
+
+    /// <summary>
+    /// Adopt a new display layout after a hotplug. Unlike the overlay, which is rebuilt from
+    /// scratch, the editor outlives a topology change, so it must be told to re-render
+    /// against the live geometry or it would keep drawing the arrangement it was opened with.
+    /// </summary>
+    public void UpdateLayout(DisplayLayout layout)
+    {
+        _layout = layout;
+
+        // Any in-flight drag refers to the old geometry; abandon it rather than map the
+        // pointer through stale rectangles.
+        if (_active is not null)
+        {
+            _active = null;
+            if (Surface.IsMouseCaptured)
+                Surface.ReleaseMouseCapture();
+        }
+
+        Render();
     }
 
     // --- rendering -----------------------------------------------------------

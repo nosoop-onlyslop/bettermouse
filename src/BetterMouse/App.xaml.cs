@@ -97,6 +97,7 @@ public partial class App : Application
         Layout = DisplayEnumerator.Enumerate();
         Config.EnsureDefaults(Layout);
         _engine.Layout = Layout;
+        _editor?.UpdateLayout(Layout);
         _overlay?.Rebuild();
         SaveConfig();
     }
