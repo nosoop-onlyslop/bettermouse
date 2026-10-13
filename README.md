@@ -10,7 +10,10 @@
 > 
 > <img width="1128" height="366" alt="image" src="https://github.com/user-attachments/assets/4de6875f-081f-4a24-a4b9-386b07fd8cc9" />
 >
-> Basically, you drag the handles up and down so they are aligned on the actual displays.
+> These are drawn as fullscreen overlays.  Basically, you drag the handles up and down so
+> they are aligned on the actual displays; the application then maps them so the mouse ends
+> up where you expect it to be.
+> 
 > My initial impression is that this hits all of my targets.  All for <$0.25 in token spend.
 
 # BetterMouse
